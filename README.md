@@ -2,9 +2,23 @@
 
 # User data script to be used in conjunction with an AWS EC2 instance and Amazon Linux AMI to launch a fully functional web based wiki system. 
 
-# Initial server update and installing Nginx 
+# Initial system update
 yum update -y
+
+# Install packages
+yum install -y php php-xml php-gd wget
+
+# Installing and starting Nginx  
 yum install -y nginx
-echo "<h1>Proof the first test worked, now on to bigger challenges!</h1>" > /usr/share/nginx/html/index.html
 systemctl start nginx
 systemctl enable nginx
+
+# Download Docuwiki
+cd /tmp
+wget https://download.dokuwiki.org/src/dokuwiki/dokuwiki-stable.tgz
+
+# Extract Docuwiki
+tar -xzf dokuwiki-stable.tgz
+
+# Move Docuwiki to web root
+mv dokuwiki-*/* /var/www/html/
