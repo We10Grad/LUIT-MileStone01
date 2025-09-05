@@ -6,7 +6,7 @@
 yum update -y
 
 # Install packages
-yum install -y php php-xml php-gd wget
+yum install -y php php-xml php-gd wget php-fpm
 
 # Installing and starting Nginx  
 yum install -y nginx
@@ -21,4 +21,4 @@ wget https://download.dokuwiki.org/src/dokuwiki/dokuwiki-stable.tgz
 tar -xzf dokuwiki-stable.tgz
 
 # Move Docuwiki to web root
-mv dokuwiki-*/* /var/www/html/
+mv dokuwiki-*/* /usr/share/nginx/html/
