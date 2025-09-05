@@ -1,2 +1,2 @@
-# LUIT-MileStone01
+# LUIT-Milestone01
 Script to launch an Amazon EC2 instance with a web server and Docuwiki setup to launch with proper permissions from the start.
