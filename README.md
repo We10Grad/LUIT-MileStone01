@@ -23,40 +23,26 @@ tar -xzf dokuwiki-stable.tgz
 # Move Docuwiki to web root
 mv dokuwiki-*/* /usr/share/nginx/html/
 
-# Configure Nginx for PHP (using official DokuWiki config)
+# Configure Nginx for PHP (official Docuwiki example)
 cat > /etc/nginx/conf.d/dokuwiki.conf << 'EOF'
  
 # PHP Handler
 upstream php-handler {
     server 127.0.0.1:9000;                    # Distro independent
+ 
 }
- 
-# Redirect SSL/443 
-server {
-    server_name default_server;
-    listen           80;            # IPv4
-    listen      [::]:80;            # IPv6
-    return      301 https://$server_name$request_uri;
-}
- 
- 
  
 # Actual configuration
 server {
  
 # BASICS 
     server_name default_server;     # optional: your domain name
-    root        /var/www/dokuwiki;
+    root        /usr/share/nginx/html;
     index       doku.php;
  
- 
-# SSL version 
-    listen           443 ssl;     # IPv4
-    listen      [::]:443 ssl;     # IPv6
-    http2       on;               # if supported, optional
- 
-    ssl_certificate     /etc/ssl/certs/***.crt;
-    ssl_certificate_key /etc/ssl/private/***.key;
+# NoSSL version 
+    listen           80;            # IPv4
+    listen      [::]:80;            # IPv6
  
 # HEADERS 
     # Information "leaks"
@@ -73,7 +59,7 @@ server {
     }
  
  
-# RESTRICT ACCESS 
+# RESTRICT ACCESS ######### ######### ######### ######### ######### ######### ##
     # Reference: https://www.dokuwiki.org/security#deny_directory_access_in_nginx
                  # TODO: Compare with this
  
@@ -92,7 +78,7 @@ server {
         #return 404; # https://www.dokuwiki.org/install:nginx?rev=1734102057#nginx_particulars
         deny all;    # Returns 403
     }
-
+ 
  
 # REDIRECT & PHP    
  
@@ -125,3 +111,11 @@ server {
     }
 }
 EOF
+
+# Remove default nginx config and add php-fm
+rm -f /etc/nginx/conf.d/default.conf
+systemctl start php-fpm
+systemctl enable php-fpm
+chown -R nginx:nginx /usr/share/nginx/html/
+systemctl restart nginx
+
