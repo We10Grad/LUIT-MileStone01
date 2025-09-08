@@ -22,3 +22,14 @@ tar -xzf dokuwiki-stable.tgz
 
 # Move Docuwiki to web root
 mv dokuwiki-*/* /usr/share/nginx/html/
+
+# Configure Docuwiki
+server {
+    listen 80;                          # Listen on port 80 (HTTP)
+    root /usr/share/nginx/html;         # Where your files are located
+    index index.php index.html;         # What files to serve by default
+    
+    # Your configuration goes here
+}
+
+# Set 
