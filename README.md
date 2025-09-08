@@ -28,7 +28,7 @@ cat > /etc/nginx/conf.d/dokuwiki.conf << 'EOF'
  
 # PHP Handler
 upstream php-handler {
-    server 127.0.0.1:9000;                    # Distro independent
+    server unix:/var/run/php/php-fpm.sock;    # Debian/Ubuntu (socket)
  
 }
  
