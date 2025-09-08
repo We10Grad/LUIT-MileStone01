@@ -23,6 +23,11 @@ tar -xzf dokuwiki-stable.tgz
 # Move Docuwiki to web root
 mv dokuwiki-*/* /usr/share/nginx/html/
 
+# Create required data directories and set permissions
+mkdir -p /usr/share/nginx/html/data/{pages,meta,media,cache,index,locks,tmp,attic}
+chown -R nginx:nginx /usr/share/nginx/html/
+chmod -R 775 /usr/share/nginx/html/data/
+
 # Configure Nginx for PHP (official Docuwiki example)
 cat > /etc/nginx/conf.d/dokuwiki.conf << 'EOF'
  
