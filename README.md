@@ -20,7 +20,8 @@ wget https://download.dokuwiki.org/src/dokuwiki/dokuwiki-stable.tgz
 # Extract Docuwiki
 tar -xzf dokuwiki-stable.tgz
 
-# Move Docuwiki to web root
+# Clear web root and move Docuwiki files
+rm -rf /usr/share/nginx/html/*
 mv dokuwiki-*/* /usr/share/nginx/html/
 
 # Create required data directories and set permissions
