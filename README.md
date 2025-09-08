@@ -29,8 +29,8 @@ server {
     root /usr/share/nginx/html;         # Where your files are located
     index index.php index.html;         # What files to serve by default
     
-    # Your configuration goes here
-# Rule 1: Try to serve files directly first
+   
+# Configuration
     location / {
         try_files $uri $uri/ @dokuwiki;
     }
