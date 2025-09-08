@@ -30,6 +30,15 @@ server {
     index index.php index.html;         # What files to serve by default
     
     # Your configuration goes here
-}
+# Rule 1: Try to serve files directly first
+    location / {
+        try_files $uri $uri/ @dokuwiki;
+    }
+    location ~ \.php$ {
+        fastcgi_pass 127.0.0.1:9000;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
 
 # Set 
