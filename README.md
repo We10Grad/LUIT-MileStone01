@@ -28,7 +28,8 @@ cat > /etc/nginx/conf.d/dokuwiki.conf << 'EOF'
  
 # PHP Handler
 upstream php-handler {
-    server unix:/var/run/php/php-fpm.sock;    # Debian/Ubuntu (socket)
+    server unix:/run/php-fpm/www.sock;        # Correct path for Amazon Linux
+}
  
 }
  
