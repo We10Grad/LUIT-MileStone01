@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # User data script to be used in conjunction with an AWS EC2 instance and Amazon Linux AMI to launch a fully functional web based wiki system. 
 
 # Initial system update
@@ -22,12 +21,33 @@ tar -xzf dokuwiki-stable.tgz
 
 # Clear web root and move Docuwiki files
 rm -rf /usr/share/nginx/html/*
-mv dokuwiki-*/* /usr/share/nginx/html/
+# Find the extracted directory (it may have a version-specific name)
+DOKUWIKI_DIR=$(find /tmp -maxdepth 1 -name "dokuwiki-*" -type d | head -1)
+if [ -n "$DOKUWIKI_DIR" ]; then
+    cp -r $DOKUWIKI_DIR/* /usr/share/nginx/html/
+else
+    echo "DokuWiki directory not found!"
+    exit 1
+fi
 
-# Create required data directories and set permissions
-mkdir -p /usr/share/nginx/html/data/{pages,meta,media,cache,index,locks,tmp,attic}     #Docuwiki specified necessary directories
+# Set proper ownership first
 chown -R nginx:nginx /usr/share/nginx/html/
-chmod -R 775 /usr/share/nginx/html/data/
+
+# Create required data directories with proper permissions
+mkdir -p /usr/share/nginx/html/data/{pages,meta,media,cache,index,locks,tmp,attic}
+mkdir -p /usr/share/nginx/html/conf
+
+# Set SELinux context if SELinux is enabled
+if command -v setsebool &> /dev/null; then
+    setsebool -P httpd_can_network_connect 1
+    setsebool -P httpd_unified 1
+fi
+
+# Set proper permissions
+chown -R nginx:nginx /usr/share/nginx/html/
+chmod -R 755 /usr/share/nginx/html/
+chmod -R 777 /usr/share/nginx/html/data/
+chmod -R 777 /usr/share/nginx/html/conf/
 
 # Configure Nginx for PHP (official Docuwiki example)
 cat > /etc/nginx/conf.d/dokuwiki.conf << 'EOF'
@@ -69,8 +89,10 @@ server {
                  # TODO: Compare with this
  
  
-    # Comment out while installing, then uncomment
-    location ~ /(install.php) { deny all; }
+    # Comment out while installing, then uncomment after setup
+    # location ~ /(install.php) { deny all; }
+
+    # After setup is complete, uncomment the install.php deny rule in /etc/nginx/conf.d/dokuwiki.conf
  
  
     # .ht             - .htaccess, .htpasswd, .htdigest, .htanything
@@ -117,10 +139,16 @@ server {
 }
 EOF
 
-# Remove default nginx config and add php-fm
+# Remove default nginx config
 rm -f /etc/nginx/conf.d/default.conf
+
+# Start and enable php-fpm
 systemctl start php-fpm
 systemctl enable php-fpm
+
+# Final permission check and restart services
 chown -R nginx:nginx /usr/share/nginx/html/
 systemctl restart nginx
+systemctl restart php-fpm
+
 
