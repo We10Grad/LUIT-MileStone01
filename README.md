@@ -36,8 +36,6 @@ upstream php-handler {
     server unix:/run/php-fpm/www.sock;        # Correct path for Amazon Linux
 }
  
-}
- 
 # Actual configuration
 server {
  
