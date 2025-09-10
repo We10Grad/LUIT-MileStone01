@@ -5,7 +5,7 @@
 yum update -y
 
 # Install packages
-yum install -y php php-xml php-gd wget php-fpm
+yum install -y php php-xml php-gd php-fpm wget
 
 # Installing and starting Nginx  
 yum install -y nginx
@@ -16,19 +16,15 @@ systemctl enable nginx
 cd /tmp
 wget https://download.dokuwiki.org/src/dokuwiki/dokuwiki-stable.tgz
 
-# Extract Docuwiki
-tar -xzf dokuwiki-stable.tgz
-
-# Clear web root and move Docuwiki files
+# Clear web root 
 rm -rf /usr/share/nginx/html/*
 
-***
+# Extract Docuwiki
+tar -xzf dokuwiki-stable.tgz --strip-components=1 -C /usr/share/nginx/html/
 
-# Set proper ownership first
-chown -R nginx:nginx /usr/share/nginx/html/
-
-# Create required data directories with proper permissions
+# Create required data directories as specified by DocuWiki
 mkdir -p /usr/share/nginx/html/data/{pages,meta,media,cache,index,locks,tmp,attic}
+# Create /conf file to save installation settings
 mkdir -p /usr/share/nginx/html/conf
 
 # Set proper permissions
