@@ -1,158 +1,219 @@
-# DokuWiki on AWS EC2 - Automated Deployment Script
+DokuWiki on AWS EC2 - Complete Deployment Script
+This bash script automatically deploys a fully functional DokuWiki installation on an AWS EC2 instance running Amazon Linux. The script creates a complete LEMP stack (Linux, Nginx, MySQL-less, PHP) with pre-populated educational content about AWS services and Linux commands.
+Features
 
-This bash script automatically deploys a fully functional DokuWiki installation on an AWS EC2 instance running Amazon Linux. The script sets up a complete LEMP stack (Linux, Nginx, MySQL-less, PHP) optimized for DokuWiki.
+Automated Installation: Complete one-script deployment of DokuWiki
+Nginx Web Server: Optimized configuration for DokuWiki
+PHP-FPM: Fast and secure PHP processing
+Pre-loaded Content: Ready-to-use wiki pages with educational material
+Security Optimized: Proper file permissions and access restrictions
+Production Ready: Follows DokuWiki security best practices
 
-## Features
+What Gets Installed
+Core Components
 
-- **Automated Installation**: One-script deployment of DokuWiki
-- **Nginx Web Server**: High-performance web server configuration
-- **PHP-FPM**: Fast and secure PHP processing
-- **Security Optimized**: Proper file permissions and access restrictions
-- **SELinux Compatible**: Automatic SELinux configuration when available
-- **Production Ready**: Follows DokuWiki security best practices
+DokuWiki: Latest stable release
+Nginx: High-performance web server
+PHP 8.x: With required extensions (XML, GD)
+PHP-FPM: FastCGI Process Manager
 
-## Prerequisites
+Pre-created Wiki Pages
 
-- AWS EC2 instance running Amazon Linux (AL2 or AL2023)
-- Instance should have internet access for package downloads
-- Security group allowing HTTP traffic (port 80)
-- Appropriate IAM permissions if using additional AWS services
+Start Page: Welcome message and site overview
+AWS Notes: Comprehensive descriptions of IAM, EC2, and S3 services
+Linux Commands: Essential CLI commands with descriptions
 
-## Quick Start
+Prerequisites
 
-### Method 1: User Data Script (Recommended)
-1. Launch a new EC2 instance
-2. In the "Advanced Details" section, paste the entire script into the "User data" field
-3. Launch the instance
-4. Wait 5-10 minutes for the installation to complete
-5. Access your wiki via `http://[your-instance-public-ip]`
+AWS EC2 instance running Amazon Linux (AL2 or AL2023)
+Instance with internet access for package downloads
+Security group allowing HTTP traffic (port 80)
+At least 1GB RAM and 10GB storage recommended
 
-### Method 2: Manual Execution
-1. SSH into your EC2 instance
-2. Upload the script file or copy its contents
-3. Make the script executable: `chmod +x dokuwiki-install.sh`
-4. Run as root: `sudo ./dokuwiki-install.sh`
+Quick Start
+Method 1: User Data Script (Recommended)
 
-## What the Script Does
+Launch a new EC2 instance
+In the "Advanced Details" section, paste the entire script into the "User data" field
+Launch the instance
+Wait 5-10 minutes for installation to complete
+Access your wiki at http://[your-instance-public-ip]
 
-1. **System Updates**: Updates all system packages to latest versions
-2. **Package Installation**: Installs PHP, PHP extensions, Nginx, and PHP-FPM
-3. **DokuWiki Download**: Downloads the latest stable DokuWiki release
-4. **Web Server Setup**: Configures Nginx with DokuWiki-optimized settings
-5. **File Permissions**: Sets proper ownership and permissions for security
-6. **Service Configuration**: Starts and enables all required services
-7. **SELinux Setup**: Configures SELinux policies if present
+Method 2: Manual Execution
 
-## Post-Installation Steps
+SSH into your EC2 instance
+Create the script file: nano dokuwiki-install.sh
+Paste the script content and save
+Make executable: chmod +x dokuwiki-install.sh
+Run as root: sudo ./dokuwiki-install.sh
 
-### Initial Setup
-1. Navigate to `http://[your-instance-public-ip]/install.php`
-2. Complete the DokuWiki installation wizard
-3. Create your admin account and configure basic settings
-4. **Important**: After setup, uncomment the install.php restriction in `/etc/nginx/conf.d/dokuwiki.conf`:
-   ```nginx
-   location ~ /(install.php) { deny all; }
-   ```
-5. Restart Nginx: `sudo systemctl restart nginx`
+Installation Process
+The script performs these steps automatically:
 
-### Security Recommendations
-- Configure SSL/TLS certificate for HTTPS
-- Set up regular backups of the `/usr/share/nginx/html/data` directory
-- Consider implementing additional authentication layers
-- Keep DokuWiki updated regularly
+System Update: Updates all packages to latest versions
+Package Installation: Installs PHP, extensions, and PHP-FPM
+Service Setup: Starts and enables PHP-FPM
+Nginx Installation: Installs and starts Nginx web server
+DokuWiki Download: Downloads latest stable DokuWiki release
+File Extraction: Extracts DokuWiki directly to web root
+Directory Creation: Creates required data and configuration directories
+Permission Setting: Sets proper ownership and permissions
+Nginx Configuration: Creates DokuWiki-optimized server configuration
+Service Restart: Restarts Nginx to load new configuration
+Content Creation: Creates initial wiki pages with educational content
 
-## File Structure
+Post-Installation
+Immediate Access
 
-After installation, DokuWiki files are located at:
-- **Web Root**: `/usr/share/nginx/html/`
-- **Data Directory**: `/usr/share/nginx/html/data/`
-- **Configuration**: `/usr/share/nginx/html/conf/`
-- **Nginx Config**: `/etc/nginx/conf.d/dokuwiki.conf`
+Navigate to http://[your-instance-public-ip]
+You'll see the welcome page immediately
+Access other pages via:
 
-## Configuration Files
+/aws_notes - AWS service descriptions
+/linux_commands - Linux CLI reference
 
-### Nginx Configuration
-The script creates a production-ready Nginx configuration with:
-- PHP-FPM upstream handler
-- Security headers
-- File upload limits (4MB)
-- Static file caching
-- URL rewriting for clean URLs
-- Directory access restrictions
 
-### PHP-FPM Configuration
-Uses the default Amazon Linux PHP-FPM configuration with Unix socket communication.
 
-## Troubleshooting
+Optional: Complete Setup Wizard
 
-### Common Issues
+Visit http://[your-instance-public-ip]/install.php for advanced configuration
+Create admin account and customize settings
+Security: After setup, manually edit /etc/nginx/conf.d/dokuwiki.conf to uncomment:
+nginxlocation ~ /(install.php) { deny all; }
 
-**DokuWiki not accessible:**
-- Check if services are running: `sudo systemctl status nginx php-fpm`
-- Verify security group allows port 80
-- Check logs: `sudo tail -f /var/log/nginx/error.log`
+Restart Nginx: sudo systemctl restart nginx
 
-**Permission errors:**
-- Verify ownership: `sudo chown -R nginx:nginx /usr/share/nginx/html/`
-- Check data directory permissions: `sudo chmod -R 777 /usr/share/nginx/html/data/`
+File Structure
+Key Directories
 
-**PHP not working:**
-- Ensure PHP-FPM is running: `sudo systemctl restart php-fpm`
-- Check PHP-FPM logs: `sudo tail -f /var/log/php-fpm/www-error.log`
+Web Root: /usr/share/nginx/html/
+Wiki Pages: /usr/share/nginx/html/data/pages/
+Configuration: /usr/share/nginx/html/conf/
+Media Files: /usr/share/nginx/html/data/media/
+Nginx Config: /etc/nginx/conf.d/dokuwiki.conf
 
-### Service Management
+Pre-created Content
 
-```bash
-# Restart services
-sudo systemctl restart nginx
+data/pages/start.txt - Main welcome page
+data/pages/aws_notes.txt - AWS services reference
+data/pages/linux_commands.txt - Linux commands guide
+
+Configuration Details
+Nginx Configuration
+
+PHP-FPM Integration: Unix socket communication
+Security Headers: Server tokens disabled
+File Upload Limit: 4MB maximum
+Static Caching: 365-day browser caching for assets
+URL Rewriting: Clean URLs without .php extensions
+Access Restrictions: Protects sensitive directories and files
+
+Security Features
+
+Blocks access to .htaccess, version control, and sensitive files
+Restricts access to data/, conf/, and other internal directories
+Proper file ownership (nginx:nginx)
+Appropriate permissions (755 for code, 777 for data)
+
+Troubleshooting
+Common Issues
+Wiki not accessible:
+bash# Check services
+sudo systemctl status nginx php-fpm
+
+# Check logs
+sudo tail -f /var/log/nginx/error.log
+sudo tail -f /var/log/nginx/access.log
+Pages not displaying:
+
+Verify files exist: ls -la /usr/share/nginx/html/data/pages/
+Check permissions: sudo chown -R nginx:nginx /usr/share/nginx/html/
+
+PHP errors:
+bash# Restart PHP-FPM
 sudo systemctl restart php-fpm
 
-# Check service status
-sudo systemctl status nginx
+# Check PHP-FPM status
 sudo systemctl status php-fpm
+Service Management
+bash# Restart services
+sudo systemctl restart nginx php-fpm
 
-# View logs
-sudo tail -f /var/log/nginx/access.log
-sudo tail -f /var/log/nginx/error.log
-```
+# View service status
+sudo systemctl status nginx php-fpm
 
-## Customization
+# Check if services start on boot
+sudo systemctl is-enabled nginx php-fpm
+Customization
+Adding More Content
+Create additional wiki pages:
+bashcat > /usr/share/nginx/html/data/pages/newpage.txt << 'EOF'
+Your content here
+EOF
+sudo chown nginx:nginx /usr/share/nginx/html/data/pages/newpage.txt
+Modifying Upload Limits
+Edit /etc/nginx/conf.d/dokuwiki.conf:
+nginxclient_max_body_size 10M;  # Increase as needed
+Restart nginx: sudo systemctl restart nginx
+Backup Strategy
+Important directories to backup:
 
-### Modify Upload Limits
-Edit `/etc/nginx/conf.d/dokuwiki.conf` and change:
-```nginx
-client_max_body_size 4M;  # Increase as needed
-```
+/usr/share/nginx/html/data/ - All wiki content
+/usr/share/nginx/html/conf/ - Configuration files
 
-### Add SSL/HTTPS
-Consider using AWS Certificate Manager with an Application Load Balancer or configure Let's Encrypt directly on the instance.
+System Requirements
+Minimum Requirements
 
-### Backup Strategy
-Create regular backups of:
-- `/usr/share/nginx/html/data/` (wiki content)
-- `/usr/share/nginx/html/conf/` (configuration)
+Instance Type: t2.micro (1 vCPU, 1GB RAM)
+Storage: 10GB EBS volume
+Network: VPC with internet gateway
 
-## System Requirements
+Recommended for Production
 
-- **Instance Type**: t2.micro or larger (t3.micro recommended)
-- **Storage**: 10GB minimum (20GB+ recommended for content growth)
-- **Memory**: 1GB minimum
-- **Network**: VPC with internet gateway for downloads
+Instance Type: t3.small or larger
+Storage: 20GB+ EBS volume
+Backup: Regular snapshots of EBS volume
+Security: HTTPS with SSL certificate
 
-## Contributing
+Educational Content Included
+AWS Services Overview
+Detailed explanations of:
 
-Feel free to submit issues, fork the repository, and create pull requests for improvements.
+AWS IAM: Identity and Access Management
+Amazon EC2: Elastic Compute Cloud
+Amazon S3: Simple Storage Service
 
-## License
+Linux Commands Reference
+Essential commands covered:
 
-This script is provided as-is under the MIT License. DokuWiki is released under the GPL license.
+Navigation: cd, pwd, ls
+File operations: cp, mv, mkdir
+And more with practical descriptions
 
-## Support
+Security Considerations
 
-- [DokuWiki Documentation](https://www.dokuwiki.org/dokuwiki)
-- [Nginx Documentation](https://nginx.org/en/docs/)
-- [AWS EC2 Documentation](https://docs.aws.amazon.com/ec2/)
+Change default DokuWiki admin credentials after setup
+Consider implementing HTTPS with Let's Encrypt or AWS Certificate Manager
+Keep DokuWiki updated regularly
+Monitor access logs for unusual activity
+Implement regular backups
 
----
+Contributing
+This script is designed for educational purposes and basic deployments. For production use, consider:
 
-**Note**: This script is designed for Amazon Linux. For other distributions, package names and paths may need to be adjusted.
+Adding SSL/HTTPS configuration
+Implementing automated backups
+Adding monitoring and alerting
+Using Application Load Balancer for high availability
+
+Support Resources
+
+DokuWiki Documentation
+Nginx Documentation
+AWS EC2 Documentation
+Amazon Linux User Guide
+
+License
+This deployment script is provided as-is under the MIT License. DokuWiki is released under the GPL license.
+
+Note: This script is optimized for Amazon Linux. Other Linux distributions may require package name and path modifications.
