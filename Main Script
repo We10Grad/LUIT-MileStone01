@@ -133,7 +133,7 @@ rm -f /etc/nginx/conf.d/default.conf
 systemctl restart nginx
 
 # Create home page welcome message
-cat > /usr/share/nginx/html/data/pages/home.txt << 'EOF' 
+cat > /usr/share/nginx/html/data/pages/start.txt << 'EOF' 
 Welcome to this website, where you can learn about basics for AWS Services and Linux Commands 
 EOF
 
