@@ -150,3 +150,4 @@ systemctl enable php-fpm
 chown -R nginx:nginx /usr/share/nginx/html/
 systemctl restart nginx
 systemctl restart php-fpm
+
