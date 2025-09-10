@@ -21,14 +21,8 @@ tar -xzf dokuwiki-stable.tgz
 
 # Clear web root and move Docuwiki files
 rm -rf /usr/share/nginx/html/*
-# Find the extracted directory (it may have a version-specific name)
-DOKUWIKI_DIR=$(find /tmp -maxdepth 1 -name "dokuwiki-*" -type d | head -1)
-if [ -n "$DOKUWIKI_DIR" ]; then
-    cp -r $DOKUWIKI_DIR/* /usr/share/nginx/html/
-else
-    echo "DokuWiki directory not found!"
-    exit 1
-fi
+
+***
 
 # Set proper ownership first
 chown -R nginx:nginx /usr/share/nginx/html/
