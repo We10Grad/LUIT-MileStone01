@@ -132,5 +132,31 @@ rm -f /etc/nginx/conf.d/default.conf
 # Nginx restart
 systemctl restart nginx
 
+# Create home page welcome message
+cat > /usr/share/nginx/html/data/pages/home.txt << 'EOF' 
+Welcome to this website, where you can learn about basics for AWS Services and Linux Commands 
+EOF
+
+# Create AWS notes page using Amazon documentation description for IAM, EC2, and S3 services
+cat > /usr/share/nginx/html/data/pages/aws_notes.txt << 'EOF' 
+Here is an overview of a few common AWS services:
+
+- AWS Identity and Access Management (IAM) is a web service that helps you securely control access to AWS resources. With IAM, you can manage permissions that control which AWS resources users can access. You use IAM to control who is authenticated (signed in) and authorized (has permissions) to use resources. IAM provides the infrastructure necessary to control authentication and authorization for your AWS accounts.
+
+- Amazon Elastic Compute Cloud (Amazon EC2) provides on-demand, scalable computing capacity in the Amazon Web Services (AWS) Cloud. Using Amazon EC2 reduces hardware costs so you can develop and deploy applications faster. You can use Amazon EC2 to launch as many or as few virtual servers as you need, configure security and networking, and manage storage. You can add capacity (scale up) to handle compute-heavy tasks, such as monthly or yearly processes, or spikes in website traffic. When usage decreases, you can reduce capacity (scale down) again.
+
+- Amazon Simple Storage Service (Amazon S3) is an object storage service that offers industry-leading scalability, data availability, security, and performance. Customers of all sizes and industries can use Amazon S3 to store and protect any amount of data for a range of use cases, such as data lakes, websites, mobile applications, backup and restore, archive, enterprise applications, IoT devices, and big data analytics. Amazon S3 provides management features so that you can optimize, organize, and configure access to your data to meet your specific business, organizational, and compliance requirements.
+EOF
+
+# Create Linux commands page
+cat > /usr/share/nginx/html/data/pages/linux_commands.txt << 'EOF' 
+Here are some useful CLI commands to know:
+- "cd" = change directory
+- "ls" = list directory contents 
+- "mkdir" = make directory 
+- "mv" = move or rename files
+- "cp" = copy file or directory
+- "pwd" = print working directory
+EOF
 
 
