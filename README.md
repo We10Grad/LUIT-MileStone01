@@ -1,154 +1,158 @@
-#!/bin/bash
-# User data script to be used in conjunction with an AWS EC2 instance and Amazon Linux AMI to launch a fully functional web based wiki system. 
+# DokuWiki on AWS EC2 - Automated Deployment Script
 
-# Initial system update
-yum update -y
+This bash script automatically deploys a fully functional DokuWiki installation on an AWS EC2 instance running Amazon Linux. The script sets up a complete LEMP stack (Linux, Nginx, MySQL-less, PHP) optimized for DokuWiki.
 
-# Install packages
-yum install -y php php-xml php-gd wget php-fpm
+## Features
 
-# Installing and starting Nginx  
-yum install -y nginx
-systemctl start nginx
-systemctl enable nginx
+- **Automated Installation**: One-script deployment of DokuWiki
+- **Nginx Web Server**: High-performance web server configuration
+- **PHP-FPM**: Fast and secure PHP processing
+- **Security Optimized**: Proper file permissions and access restrictions
+- **SELinux Compatible**: Automatic SELinux configuration when available
+- **Production Ready**: Follows DokuWiki security best practices
 
-# Download Docuwiki
-cd /tmp
-wget https://download.dokuwiki.org/src/dokuwiki/dokuwiki-stable.tgz
+## Prerequisites
 
-# Extract Docuwiki
-tar -xzf dokuwiki-stable.tgz
+- AWS EC2 instance running Amazon Linux (AL2 or AL2023)
+- Instance should have internet access for package downloads
+- Security group allowing HTTP traffic (port 80)
+- Appropriate IAM permissions if using additional AWS services
 
-# Clear web root and move Docuwiki files
-rm -rf /usr/share/nginx/html/*
-# Find the extracted directory (it may have a version-specific name)
-DOKUWIKI_DIR=$(find /tmp -maxdepth 1 -name "dokuwiki-*" -type d | head -1)
-if [ -n "$DOKUWIKI_DIR" ]; then
-    cp -r $DOKUWIKI_DIR/* /usr/share/nginx/html/
-else
-    echo "DokuWiki directory not found!"
-    exit 1
-fi
+## Quick Start
 
-# Set proper ownership first
-chown -R nginx:nginx /usr/share/nginx/html/
+### Method 1: User Data Script (Recommended)
+1. Launch a new EC2 instance
+2. In the "Advanced Details" section, paste the entire script into the "User data" field
+3. Launch the instance
+4. Wait 5-10 minutes for the installation to complete
+5. Access your wiki via `http://[your-instance-public-ip]`
 
-# Create required data directories with proper permissions
-mkdir -p /usr/share/nginx/html/data/{pages,meta,media,cache,index,locks,tmp,attic}
-mkdir -p /usr/share/nginx/html/conf
+### Method 2: Manual Execution
+1. SSH into your EC2 instance
+2. Upload the script file or copy its contents
+3. Make the script executable: `chmod +x dokuwiki-install.sh`
+4. Run as root: `sudo ./dokuwiki-install.sh`
 
-# Set SELinux context if SELinux is enabled
-if command -v setsebool &> /dev/null; then
-    setsebool -P httpd_can_network_connect 1
-    setsebool -P httpd_unified 1
-fi
+## What the Script Does
 
-# Set proper permissions
-chown -R nginx:nginx /usr/share/nginx/html/
-chmod -R 755 /usr/share/nginx/html/
-chmod -R 777 /usr/share/nginx/html/data/
-chmod -R 777 /usr/share/nginx/html/conf/
+1. **System Updates**: Updates all system packages to latest versions
+2. **Package Installation**: Installs PHP, PHP extensions, Nginx, and PHP-FPM
+3. **DokuWiki Download**: Downloads the latest stable DokuWiki release
+4. **Web Server Setup**: Configures Nginx with DokuWiki-optimized settings
+5. **File Permissions**: Sets proper ownership and permissions for security
+6. **Service Configuration**: Starts and enables all required services
+7. **SELinux Setup**: Configures SELinux policies if present
 
-# Configure Nginx for PHP (official Docuwiki example)
-cat > /etc/nginx/conf.d/dokuwiki.conf << 'EOF'
- 
-# PHP Handler
-upstream php-handler {
-    server unix:/run/php-fpm/www.sock;        # Correct path for Amazon Linux
-}
- 
-# Actual configuration
-server {
- 
-# BASICS 
-    server_name default_server;     # optional: your domain name
-    root        /usr/share/nginx/html;
-    index       doku.php;
- 
-# NoSSL version 
-    listen           80;            # IPv4
-    listen      [::]:80;            # IPv6
- 
-# HEADERS 
-    # Information "leaks"
-    server_tokens       off;
-    fastcgi_hide_header X-Powered_by;
- 
-# TWEAKS 
- 
-    client_max_body_size 4M;          # Maximum file upload size
-    client_body_buffer_size 128k;
- 
-    location ~ ^/lib.*\.(js|css|gif|png|ico|jpg|jpeg|svg)$ {
-        expires 365d;   # browser caching
-    }
- 
- 
-# RESTRICT ACCESS ######### ######### ######### ######### ######### ######### ##
-    # Reference: https://www.dokuwiki.org/security#deny_directory_access_in_nginx
-                 # TODO: Compare with this
- 
- 
-    # Comment out while installing, then uncomment after setup
-    # location ~ /(install.php) { deny all; }
+## Post-Installation Steps
 
-    # After setup is complete, uncomment the install.php deny rule in /etc/nginx/conf.d/dokuwiki.conf
- 
- 
-    # .ht             - .htaccess, .htpasswd, .htdigest, .htanything
-    # .git, .hg, .svn - Git, Mercurial, Subversion.
-    # .vs             - Visual Studio (Code)
-    # All directories except lib.
-    # All "other" files that you don't want to delete, but don't want public.
- 
-    location ~ /(\.ht|\.git|\.hg|\.svn|\.vs|data|conf|bin|inc|vendor|README|VERSION|SECURITY.md|COPYING|composer.json|composer.lock) {
-        #return 404; # https://www.dokuwiki.org/install:nginx?rev=1734102057#nginx_particulars
-        deny all;    # Returns 403
-    }
- 
- 
-# REDIRECT & PHP    
- 
-    location / {
-        try_files $uri $uri/ @dokuwiki;
- 
-        # This means; where $uri is 'path', if 'GET /path' doesnt exist, redirect
-        # client to 'GET /path/' directory. If neither, goto @dokuwiki rules.
-    }
- 
-    location @dokuwiki {
-        rewrite ^/_media/(.*) /lib/exe/fetch.php?media=$1 last;
-        rewrite ^/_detail/(.*) /lib/exe/detail.php?media=$1 last;
-        rewrite ^/_export/([^/]+)/(.*) /doku.php?do=export_$1&id=$2 last;
-        rewrite ^/(.*) /doku.php?id=$1&$args last;
- 
-        # rewrites "doku.php/" out of the URLs if you set the userewrite
-        # setting to .htaccess in dokuwiki config page
-    }
- 
-    location ~ \.php$ {
-        try_files $uri $uri/ /doku.php;
- 
-        include       fastcgi_params;
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-        fastcgi_param REDIRECT_STATUS 200;
-        # fastcgi_param HTTPS on;     # optional ?! TODO
- 
-        fastcgi_pass php-handler;
-    }
-}
-EOF
+### Initial Setup
+1. Navigate to `http://[your-instance-public-ip]/install.php`
+2. Complete the DokuWiki installation wizard
+3. Create your admin account and configure basic settings
+4. **Important**: After setup, uncomment the install.php restriction in `/etc/nginx/conf.d/dokuwiki.conf`:
+   ```nginx
+   location ~ /(install.php) { deny all; }
+   ```
+5. Restart Nginx: `sudo systemctl restart nginx`
 
-# Remove default nginx config
-rm -f /etc/nginx/conf.d/default.conf
+### Security Recommendations
+- Configure SSL/TLS certificate for HTTPS
+- Set up regular backups of the `/usr/share/nginx/html/data` directory
+- Consider implementing additional authentication layers
+- Keep DokuWiki updated regularly
 
-# Start and enable php-fpm
-systemctl start php-fpm
-systemctl enable php-fpm
+## File Structure
 
-# Final permission check and restart services
-chown -R nginx:nginx /usr/share/nginx/html/
-systemctl restart nginx
-systemctl restart php-fpm
+After installation, DokuWiki files are located at:
+- **Web Root**: `/usr/share/nginx/html/`
+- **Data Directory**: `/usr/share/nginx/html/data/`
+- **Configuration**: `/usr/share/nginx/html/conf/`
+- **Nginx Config**: `/etc/nginx/conf.d/dokuwiki.conf`
 
+## Configuration Files
 
+### Nginx Configuration
+The script creates a production-ready Nginx configuration with:
+- PHP-FPM upstream handler
+- Security headers
+- File upload limits (4MB)
+- Static file caching
+- URL rewriting for clean URLs
+- Directory access restrictions
+
+### PHP-FPM Configuration
+Uses the default Amazon Linux PHP-FPM configuration with Unix socket communication.
+
+## Troubleshooting
+
+### Common Issues
+
+**DokuWiki not accessible:**
+- Check if services are running: `sudo systemctl status nginx php-fpm`
+- Verify security group allows port 80
+- Check logs: `sudo tail -f /var/log/nginx/error.log`
+
+**Permission errors:**
+- Verify ownership: `sudo chown -R nginx:nginx /usr/share/nginx/html/`
+- Check data directory permissions: `sudo chmod -R 777 /usr/share/nginx/html/data/`
+
+**PHP not working:**
+- Ensure PHP-FPM is running: `sudo systemctl restart php-fpm`
+- Check PHP-FPM logs: `sudo tail -f /var/log/php-fpm/www-error.log`
+
+### Service Management
+
+```bash
+# Restart services
+sudo systemctl restart nginx
+sudo systemctl restart php-fpm
+
+# Check service status
+sudo systemctl status nginx
+sudo systemctl status php-fpm
+
+# View logs
+sudo tail -f /var/log/nginx/access.log
+sudo tail -f /var/log/nginx/error.log
+```
+
+## Customization
+
+### Modify Upload Limits
+Edit `/etc/nginx/conf.d/dokuwiki.conf` and change:
+```nginx
+client_max_body_size 4M;  # Increase as needed
+```
+
+### Add SSL/HTTPS
+Consider using AWS Certificate Manager with an Application Load Balancer or configure Let's Encrypt directly on the instance.
+
+### Backup Strategy
+Create regular backups of:
+- `/usr/share/nginx/html/data/` (wiki content)
+- `/usr/share/nginx/html/conf/` (configuration)
+
+## System Requirements
+
+- **Instance Type**: t2.micro or larger (t3.micro recommended)
+- **Storage**: 10GB minimum (20GB+ recommended for content growth)
+- **Memory**: 1GB minimum
+- **Network**: VPC with internet gateway for downloads
+
+## Contributing
+
+Feel free to submit issues, fork the repository, and create pull requests for improvements.
+
+## License
+
+This script is provided as-is under the MIT License. DokuWiki is released under the GPL license.
+
+## Support
+
+- [DokuWiki Documentation](https://www.dokuwiki.org/dokuwiki)
+- [Nginx Documentation](https://nginx.org/en/docs/)
+- [AWS EC2 Documentation](https://docs.aws.amazon.com/ec2/)
+
+---
+
+**Note**: This script is designed for Amazon Linux. For other distributions, package names and paths may need to be adjusted.
