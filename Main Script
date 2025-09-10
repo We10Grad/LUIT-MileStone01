@@ -37,12 +37,6 @@ chown -R nginx:nginx /usr/share/nginx/html/
 mkdir -p /usr/share/nginx/html/data/{pages,meta,media,cache,index,locks,tmp,attic}
 mkdir -p /usr/share/nginx/html/conf
 
-# Set SELinux context if SELinux is enabled
-if command -v setsebool &> /dev/null; then
-    setsebool -P httpd_can_network_connect 1
-    setsebool -P httpd_unified 1
-fi
-
 # Set proper permissions
 chown -R nginx:nginx /usr/share/nginx/html/
 chmod -R 755 /usr/share/nginx/html/
@@ -150,4 +144,5 @@ systemctl enable php-fpm
 chown -R nginx:nginx /usr/share/nginx/html/
 systemctl restart nginx
 systemctl restart php-fpm
+
 
