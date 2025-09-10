@@ -31,7 +31,7 @@ mkdir -p /usr/share/nginx/html/data/{pages,meta,media,cache,index,locks,tmp,atti
 # Create /conf file to save installation settings
 mkdir -p /usr/share/nginx/html/conf
 
-# Set proper permissions
+# Set proper permissions so users can edit wiki pages
 chown -R nginx:nginx /usr/share/nginx/html/
 chmod -R 755 /usr/share/nginx/html/
 chmod -R 777 /usr/share/nginx/html/data/
